@@ -43,7 +43,7 @@ libA和libB假设是我们正常开发的Library Project，我们可以运行
 
      ./gradlew packLibB
 
-就会在Example下output下生成libA.jar，libB.jar会包含生命的依赖的libA和rxjava，rxandroid。
+就会在Example下output下生成libB.jar，libB.jar会包含生命的依赖的libA和rxjava，rxandroid。
 
 ## 如何使用
 
