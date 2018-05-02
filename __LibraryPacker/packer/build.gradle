@@ -1,0 +1,75 @@
+apply plugin: 'com.android.application'
+apply plugin: "com.github.lanchon.dexpatcher.base"
+
+dexpatcherConfig {
+    dir = project.file('dexpatcher-gradle-tools')
+}
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+    defaultConfig {
+        applicationId "com.pangxiezhou.packjar"
+        minSdkVersion 16
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    lintOptions {
+        warning 'InvalidPackage'
+    }
+}
+
+if(hasProperty('libType')) {
+    if(libType == 'project') {
+        def config = hasProperty('libConfig')? libConfig:'default'
+        dependencies {
+            compile project(path: libName, configuration: config)
+        }
+    }else if(libType == 'maven') {
+        dependencies {
+            compile libName
+        }
+    }
+
+    task unzipAPK(type: Copy, dependsOn: build){
+        from(zipTree(new File(buildDir, 'outputs/apk/packer-debug.apk'))) {
+            include 'classes.dex'
+        }
+
+        into file('unzip_dex')
+    }
+
+    task packPreJar(type: lanchon.dexpatcher.gradle.tasks.Dex2jarTask, dependsOn: unzipAPK) {
+        dexFiles = file('unzip_dex/classes.dex')
+        outputFile = file("release_jar/_pre.jar")
+
+        doFirst {
+            delete file('release_jar')
+        }
+
+        doLast {
+            delete file('unzip_dex')
+        }
+
+    }
+
+    task packJar(type: Jar, dependsOn: packPreJar) {
+        archiveName = libArchiveName
+        destinationDir = libOutputDir
+        from zipTree(file("release_jar/_pre.jar")).matching {
+            exclude 'com/pangxiezhou/'
+        }
+
+        doLast {
+            delete file("release_jar")
+        }
+    }
+
+}

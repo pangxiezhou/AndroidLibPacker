@@ -1,0 +1,52 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    repositories {
+        jcenter()
+
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.3.1'
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+// 自动提取工程的所有依赖项
+def resolveDependencies(String moduleName) {
+    def dependencies = [:]
+    def dependencyPattern = ~/ project\('(.*?)'\)\s*/
+    def matcher = project(moduleName).buildFile.text =~ dependencyPattern
+    while(matcher.find()){
+        dependencies.put(matcher.group(1), project(matcher.group(1)).projectDir)
+    }
+    return dependencies
+}
+
+task packLibB(type:GradleBuild) {
+    buildFile = '../__LibraryPacker/build.gradle'
+    tasks = ['clean', 'packLibJar']
+
+    //指定需要pack的library工程名
+    def targetLibName = ':libB'
+    //指定需要pack的library的variant，可选（默认default)
+    def targetLibConfig = 'default'
+    startParameter.setProjectProperties(['libType'        : 'project',
+                                         'libName'        : targetLibName,
+                                         'libPath'        : project(targetLibName).projectDir,
+                                         'libConfig'      : targetLibConfig,
+                                         'libDependencies': resolveDependencies(targetLibName),
+                                         'libArchiveName' : "${project(targetLibName).name}.jar",
+                                         'libOutputDir'   : file('output/libs')])
+}

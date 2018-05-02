@@ -1,0 +1,34 @@
+//usage
+
+//task packAssistKitJar(type: GradleBuild){
+//    buildFile = '../__LibraryPacker/build.gradle'
+//    tasks = ['clean', 'packLibJar']
+//
+//    startParameter.setProjectProperties(['libType'       : 'maven',
+//                                         'libName'       : 'com.iflytek.aiuicommon:AIUICommon:1.0.0-SNAPSHOT',
+//                                         'libArchiveName': 'output.jar',
+//                                         'libOutputDir'  : projectDir])
+//
+//    startParameter.setProjectProperties(['libType'       : 'project',
+//                                         'libName'       : ':AIUIAssistKit',
+//                                         'libPath'       : project(':AIUIAssistKit').projectDir,
+//                                         'libArchiveName': "${project(':AIUIAssistKit').name}.jar",
+//                                         'libOutputDir'  : file('output/libs')])
+//
+//}
+
+
+include ':packer'
+//libType project maven
+if(hasProperty('libType') && libType == 'project'){
+    include libName
+    project(libName).projectDir = libPath
+
+    if(hasProperty('libDependencies')) {
+        libDependencies.each { k,v ->
+            include k
+            project(k).projectDir = v
+        }
+    }
+
+}
